@@ -19,10 +19,10 @@ import org.springframework.batch.item.ItemProcessor;
 import uk.ac.ebi.ampt2d.commons.accession.core.models.EventType;
 import uk.ac.ebi.ampt2d.commons.accession.hashing.SHA1HashingFunction;
 
-import uk.ac.ebi.eva.accession.core.io.FastaSequenceReader;
-import uk.ac.ebi.eva.accession.core.persistence.DbsnpSubmittedVariantEntity;
 import uk.ac.ebi.eva.accession.core.ISubmittedVariant;
 import uk.ac.ebi.eva.accession.core.SubmittedVariant;
+import uk.ac.ebi.eva.accession.core.io.FastaSequenceReader;
+import uk.ac.ebi.eva.accession.core.persistence.DbsnpSubmittedVariantEntity;
 import uk.ac.ebi.eva.accession.core.persistence.DbsnpSubmittedVariantInactiveEntity;
 import uk.ac.ebi.eva.accession.core.persistence.DbsnpSubmittedVariantOperationEntity;
 import uk.ac.ebi.eva.accession.core.summary.DbsnpSubmittedVariantSummaryFunction;
