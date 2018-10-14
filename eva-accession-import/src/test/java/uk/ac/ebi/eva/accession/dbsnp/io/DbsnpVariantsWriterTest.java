@@ -895,4 +895,3 @@ sts |   ss_create_time    |   rs_create_time    | load_order |  contig_name
         dbsnpVariantsWriter.write(Arrays.asList(wrapper));
     }
 }
-}
