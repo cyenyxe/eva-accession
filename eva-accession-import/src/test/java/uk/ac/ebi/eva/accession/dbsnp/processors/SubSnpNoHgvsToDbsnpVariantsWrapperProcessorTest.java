@@ -37,10 +37,8 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 public class SubSnpNoHgvsToDbsnpVariantsWrapperProcessorTest {
 
@@ -612,4 +610,31 @@ public class SubSnpNoHgvsToDbsnpVariantsWrapperProcessorTest {
         assertProcessedVariant(subSnpNoHgvs, variants.get(1), CONTIG_NAME, CONTIG_START, "T", "C", false, false, 1);
     }
 
+    @Test
+    public void test() throws Exception {
+        /*
+         batch_id |   batch_name    | batch_handle | tax_id | univar_id | var_str | snp_class |   rs_id   |   ss_id    | contig_name_donot
+use | contig_start | chromosome | chromosome_start | reference | alleles | loc_type | subsnp_orientation | snp_orientation | conti
+g_orientation | asn_from | phys_pos_from | lc_ngbr | snp_validation_status | subsnp_validation_status | genotype_exists | freq_exi
+sts |   ss_create_time    |   rs_create_time    | load_order |  contig_name
+----------+-----------------+--------------+--------+-----------+---------+-----------+-----------+------------+------------------
+----+--------------+------------+------------------+-----------+---------+----------+--------------------+-----------------+------
+--------------+----------+---------------+---------+-----------------------+--------------------------+-----------------+---------
+----+---------------------+---------------------+------------+----------------
+  1062002 | LAMINAE_RNA-SEQ | BROOKSLAB    |   9796 |         5 | A/C     |         1 | 782821801 | 1457741630 | NW_001868106
+    |       124459 |            |                  | A         | A/C     |        2 |                  1 |               1 |
+            0 |   124458 |               |  124457 |                       |                        1 |               0 |
+  0 | 2014-11-26 11:41:00 | 2015-04-14 13:20:00 |   23725581 | NW_001868106.1
+         */
+
+        SubSnpNoHgvs subSnpNoHgvs = new SubSnpNoHgvs(1457741630L, 782821801L, "A", "A/C", "GCF_00002305.2", "BROOKSLAB",
+                "LAMINAE_RNA-SEQ", null, null, "NW_001868106.1",
+                124459, DbsnpVariantType.SNV, Orientation.FORWARD,
+                Orientation.FORWARD, Orientation.UNKNOWN, false, true, false,
+                false, SS_CREATED_DATE, RS_CREATED_DATE, 9796);
+
+        DbsnpVariantsWrapper wrapper = processor.process(subSnpNoHgvs);
+
+        assertNotNull(wrapper.getClusteredVariant());
+    }
 }

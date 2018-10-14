@@ -46,11 +46,21 @@ import uk.ac.ebi.eva.accession.core.persistence.DbsnpSubmittedVariantOperationEn
 import uk.ac.ebi.eva.accession.core.persistence.DbsnpSubmittedVariantOperationRepository;
 import uk.ac.ebi.eva.accession.core.summary.ClusteredVariantSummaryFunction;
 import uk.ac.ebi.eva.accession.core.summary.SubmittedVariantSummaryFunction;
+import uk.ac.ebi.eva.accession.dbsnp.contig.ContigMapping;
 import uk.ac.ebi.eva.accession.dbsnp.listeners.ImportCounts;
+import uk.ac.ebi.eva.accession.dbsnp.model.DbsnpVariantType;
+import uk.ac.ebi.eva.accession.dbsnp.model.Orientation;
+import uk.ac.ebi.eva.accession.dbsnp.model.SubSnpNoHgvs;
 import uk.ac.ebi.eva.accession.dbsnp.persistence.DbsnpVariantsWrapper;
+import uk.ac.ebi.eva.accession.dbsnp.processors.SubSnpNoHgvsToDbsnpVariantsWrapperProcessor;
 import uk.ac.ebi.eva.accession.dbsnp.processors.SubmittedVariantDeclusterProcessor;
 import uk.ac.ebi.eva.commons.core.models.VariantType;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -59,10 +69,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static uk.ac.ebi.eva.accession.core.ISubmittedVariant.DEFAULT_ALLELES_MATCH;
 import static uk.ac.ebi.eva.accession.core.ISubmittedVariant.DEFAULT_ASSEMBLY_MATCH;
 import static uk.ac.ebi.eva.accession.core.ISubmittedVariant.DEFAULT_SUPPORTED_BY_EVIDENCE;
@@ -852,4 +859,40 @@ public class DbsnpVariantsWriterTest {
         assertClusteredVariantMergeOperationStored(2, clusteredVariantEntity2);
         assertEquals(0, mongoTemplate.count(new Query(), DBSNP_CLUSTERED_VARIANT_DECLUSTERED_COLLECTION_NAME));
     }
+
+    @Test
+    public void test() throws Exception {
+        /*
+         batch_id |   batch_name    | batch_handle | tax_id | univar_id | var_str | snp_class |   rs_id   |   ss_id    | contig_name_donot
+use | contig_start | chromosome | chromosome_start | reference | alleles | loc_type | subsnp_orientation | snp_orientation | conti
+g_orientation | asn_from | phys_pos_from | lc_ngbr | snp_validation_status | subsnp_validation_status | genotype_exists | freq_exi
+sts |   ss_create_time    |   rs_create_time    | load_order |  contig_name
+----------+-----------------+--------------+--------+-----------+---------+-----------+-----------+------------+------------------
+----+--------------+------------+------------------+-----------+---------+----------+--------------------+-----------------+------
+--------------+----------+---------------+---------+-----------------------+--------------------------+-----------------+---------
+----+---------------------+---------------------+------------+----------------
+  1062002 | LAMINAE_RNA-SEQ | BROOKSLAB    |   9796 |         5 | A/C     |         1 | 782821801 | 1457741630 | NW_001868106
+    |       124459 |            |                  | A         | A/C     |        2 |                  1 |               1 |
+            0 |   124458 |               |  124457 |                       |                        1 |               0 |
+  0 | 2014-11-26 11:41:00 | 2015-04-14 13:20:00 |   23725581 | NW_001868106.1
+         */
+
+        SubSnpNoHgvs subSnpNoHgvs = new SubSnpNoHgvs(1457741630L, 782821801L, "A", "A/C", "GCF_00002305.2", "BROOKSLAB",
+                "LAMINAE_RNA-SEQ", null, null, "NW_001868106.1",
+                124459, DbsnpVariantType.SNV, Orientation.FORWARD,
+                Orientation.FORWARD, Orientation.UNKNOWN, false, true, false,
+                false, Timestamp.from(Instant.now()), Timestamp.from(Instant.now()), 9796);
+
+        Path fastaPath = Paths.get("src/test/resources/input-files/fasta/Gallus_gallus-5.0.test.fa");
+        ContigMapping contigMapping = new ContigMapping(Collections.emptyList());
+        FastaSynonymSequenceReader fastaSynonymSequenceReader = new FastaSynonymSequenceReader(contigMapping, fastaPath);
+        SubSnpNoHgvsToDbsnpVariantsWrapperProcessor processor = new SubSnpNoHgvsToDbsnpVariantsWrapperProcessor("GCF_00002305.2", fastaSynonymSequenceReader,
+                Collections.emptyList());
+        DbsnpVariantsWrapper wrapper = processor.process(subSnpNoHgvs);
+
+        assertNotNull(wrapper.getClusteredVariant());
+
+        dbsnpVariantsWriter.write(Arrays.asList(wrapper));
+    }
+}
 }
